@@ -7,9 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 public class UrlController {
 
@@ -19,8 +16,15 @@ public class UrlController {
     private UrlService urlService;
 
     @PostMapping("/url/shorten")
-    public String shortenUrl(@RequestParam String longUrl) {
-        return urlService.shortenUrl(longUrl);
+    public ResponseEntity<?> shortenUrl(@RequestParam String longUrl, @RequestParam(required = false) String customAlias) {
+        try {
+            String shortUrl = urlService.shortenUrl(longUrl,customAlias);
+            return ResponseEntity.ok(shortUrl);
+        }catch(AliasAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }catch (InvalidAliasException e ) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/url/expand")

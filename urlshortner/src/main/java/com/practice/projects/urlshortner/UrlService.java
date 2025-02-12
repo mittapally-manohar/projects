@@ -12,23 +12,40 @@ public class UrlService {
     @Autowired
     private UrlRepository urlRepository;
 
-    public String shortenUrl(String longUrl) {
-        //check if url already exists in db
-        Url existingUrl = urlRepository.findByLongUrl(longUrl);
-        if(existingUrl != null) {
-            return existingUrl.getShortUrl();
+    public String shortenUrl(String longUrl, String customAlias) throws InvalidAliasException, AliasAlreadyExistsException {
+
+        if(customAlias != null || !customAlias.isEmpty()) {
+            validateCustomAlias(customAlias);
+
+            // Check if the alias is already taken
+            if (urlRepository.findByShortUrl(customAlias) != null) {
+                throw new AliasAlreadyExistsException("Custom alias is already in use.");
+            }
+            Url url = new Url();
+            url.setLongUrl(longUrl);
+            url.setShortUrl(customAlias);
+            urlRepository.save(url);
+            return customAlias;
+        } else {
+            //generate a new short url
+            String shortUrl = generateShortUrl(longUrl);
+            // Save the mapping to the database
+            Url url = new Url();
+            url.setLongUrl(longUrl);
+            url.setShortUrl(shortUrl);
+            urlRepository.save(url);
+            return shortUrl;
         }
 
-        //generate a new short url
-        String shortUrl = generateShortUrl(longUrl);
+    }
 
-        // Save the mapping to the database
-        Url url = new Url();
-        url.setLongUrl(longUrl);
-        url.setShortUrl(shortUrl);
-        urlRepository.save(url);
-
-        return shortUrl;
+    private void validateCustomAlias(String customAlias) throws InvalidAliasException {
+        // Allow alphanumeric, underscores, and hyphens (adjust regex as needed)
+        if (!customAlias.matches("^[a-zA-Z0-9_-]{3,20}$")) {
+            throw new InvalidAliasException(
+                    "Custom alias must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens."
+            );
+        }
     }
 
     private String generateShortUrl(String longUrl) {
