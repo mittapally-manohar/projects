@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Folder Directory</title>
+    <script>
+        function toggleVisibility(id) {
+            var element = document.getElementById(id);
+            if (element.style.display === "none") {
+                element.style.display = "block";
+            } else {
+                element.style.display = "none";
+            }
+        }
+
+        function showInputBox(parentName, isFile) {
+            var inputBox = document.getElementById("newItemInput");
+            inputBox.style.display = "block";
+            inputBox.style.top = event.clientY + "px";
+            inputBox.style.left = event.clientX + "px";
+            document.getElementById("newItemName").dataset.parentName = parentName;
+            document.getElementById("newItemName").dataset.isFile = isFile;
+        }
+
+        function addNewItem() {
+            var newItemName = document.getElementById("newItemName").value;
+            var parentName = document.getElementById("newItemName").dataset.parentName;
+            var isFile = document.getElementById("newItemName").dataset.isFile === "true";
+
+            fetch('/addNewItem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    parentName: parentName,
+                    newItemName: newItemName,
+                    isFile: isFile
+                })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Error adding new item");
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+
+<h2>VS Code-like Folder Directory</h2>
+
+<ul>
+    <li th:each="folder, iterStat : ${folders}">
+        <span th:if="!${folder.isFile}" th:onclick="'toggleVisibility(\'sub_' + ${iterStat.index} + '\')'">
+            📁 <span th:text="${folder.name}"></span>
+            <button type="button" th:onclick="'showInputBox(\'' + ${folder.name} + '\', false)'">➕ Folder</button>
+            <button type="button" th:onclick="'showInputBox(\'' + ${folder.name} + '\', true)'">📄 File</button>
+        </span>
+        <span th:if="${folder.isFile}">📄 <span th:text="${folder.name}"></span></span>
+
+        <ul th:id="'sub_' + ${iterStat.index}" style="display:none;" th:if="!${folder.isFile}">
+            <li th:each="subFolder : ${folder.children}">
+                <span th:if="!${subFolder.isFile}" th:onclick="'toggleVisibility(\'sub_sub_' + ${iterStat.index} + '\')'">
+                    📁 <span th:text="${subFolder.name}"></span>
+                    <button type="button" th:onclick="'showInputBox(\'' + ${subFolder.name} + '\', false)'">➕ Folder</button>
+                    <button type="button" th:onclick="'showInputBox(\'' + ${subFolder.name} + '\', true)'">📄 File</button>
+                </span>
+                <span th:if="${subFolder.isFile}">📄 <span th:text="${subFolder.name}"></span></span>
+            </li>
+        </ul>
+    </li>
+</ul>
+
+<!-- Input Box for New Folder/File -->
+<div id="newItemInput" style="display:none; position:absolute; background:white; padding:5px; border:1px solid black;">
+    <input type="text" id="newItemName" placeholder="Enter name">
+    <button type="button" onclick="addNewItem()">Add</button>
+</div>
+
+</body>
+</html>

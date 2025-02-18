@@ -1,0 +1,25 @@
+[
+  {
+    "name": "src",
+    "isFile": false,
+    "children": [
+      {
+        "name": "main",
+        "isFile": false,
+        "children": [
+          { "name": "Application.java", "isFile": true, "children": [] }
+        ]
+      },
+      {
+        "name": "test",
+        "isFile": false,
+        "children": []
+      }
+    ]
+  },
+  {
+    "name": "README.md",
+    "isFile": true,
+    "children": []
+  }
+]
